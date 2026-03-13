@@ -7,75 +7,97 @@
     <style>
       body {
         font-family: sans-serif;
-        max-width: 800px;
+        max-width: 900px;
         margin: 0 auto;
         padding: 20px;
+        background-color: #f4f4f9;
       }
       .katalog-container {
         display: flex;
         flex-wrap: wrap;
-        gap: 20px;
+        gap: 25px;
         justify-content: center;
+        padding: 20px 0;
       }
-      .katalog-item {
-        border: 1px solid #ccc;
-        padding: 15px;
-        text-align: center;
-        border-radius: 8px;
-        width: 250px;
+
+      /* Gaya Baru untuk Card */
+      .card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        width: 280px;
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
       }
-      .katalog-item img {
-        max-width: 100%;
-        height: auto;
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      }
+      .card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover; /* Memastikan gambar tidak herot */
         cursor: pointer;
-        border-radius: 4px;
+        display: block;
       }
-      .katalog-item h3 {
+      .card-body {
+        padding: 20px;
+        text-align: center;
+      }
+      .card-body h3 {
+        margin: 0 0 10px 0;
         cursor: pointer;
         color: #0070f3;
-        margin-bottom: 5px;
+        font-size: 1.2em;
       }
+
       .detail-box {
-        margin-top: 10px;
+        margin-top: 15px;
         font-size: 0.9em;
-        color: #333;
+        color: #444;
         display: none;
-        background: #f9f9f9;
-        padding: 10px;
-        border-radius: 4px;
+        background: #f0f4f8;
+        padding: 12px;
+        border-radius: 6px;
+        text-align: left;
       }
       .source-badge {
         font-size: 0.7em;
         font-weight: bold;
         color: white;
         background: #e00;
-        padding: 2px 5px;
-        border-radius: 3px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-top: 10px;
       }
       .source-redis {
         background: #0070f3;
       }
       footer {
         margin-top: 40px;
-        border-top: 2px solid #eee;
+        border-top: 2px solid #ddd;
         padding-top: 20px;
         text-align: center;
         font-family: monospace;
+        color: #555;
       }
     </style>
   </head>
   <body>
-    <h1 style="text-align: center">Koleksi Seni</h1>
+    <h1 style="text-align: center; color: #333">Koleksi Seni</h1>
     <p style="text-align: center; font-size: 0.9em; color: gray">
-      *Klik gambar atau judul untuk melihat detail koleksi
+      *Klik gambar atau judul untuk melihat butiran koleksi
     </p>
 
     <div id="katalog" class="katalog-container">
-      <p>Memuat koleksi...</p>
+      <p>Memuatkan koleksi...</p>
     </div>
 
     <footer id="fortune-footer">
-      <p>Memuat Fortune...</p>
+      <p>Memuatkan Fortune...</p>
     </footer>
 
     <script>
@@ -88,16 +110,18 @@
 
           response.data.forEach((item) => {
             const el = document.createElement("div");
-            el.className = "katalog-item";
+            el.className = "card"; // Menggunakan class card
             el.innerHTML = `
-                        <img src="${item.path}" alt="${item.judul}" onclick="tampilkanDetail(${item.id})">
-                        <h3 onclick="tampilkanDetail(${item.id})">${item.judul}</h3>
-                        <div id="detail-${item.id}" class="detail-box">Memuat detail...</div>
-                    `;
+                <img src="${item.path}" alt="${item.judul}" onclick="tampilkanDetail(${item.id})">
+                <div class="card-body">
+                    <h3 onclick="tampilkanDetail(${item.id})">${item.judul}</h3>
+                    <div id="detail-${item.id}" class="detail-box">Memuatkan butiran...</div>
+                </div>
+            `;
             katalogDiv.appendChild(el);
           });
         })
-        .catch((err) => console.error("Error muat katalog:", err));
+        .catch((err) => console.error("Ralat memuatkan katalog:", err));
 
       // 2. Fungsi saat gambar/judul diklik (get-detail)
       function tampilkanDetail(id) {
@@ -110,7 +134,7 @@
         }
 
         detailBox.style.display = "block";
-        detailBox.innerHTML = "Memuat detail...";
+        detailBox.innerHTML = "Memuatkan butiran...";
 
         fetch(`/api/get-detail?id=${id}`)
           .then((res) => res.json())
@@ -122,12 +146,12 @@
             detailBox.innerHTML = `
                         <strong>Pencipta:</strong> ${dt.pencipta} <br>
                         <strong>Tahun:</strong> ${dt.tahun} <br>
-                        <strong>Harga:</strong> Rp${dt.harga.toLocaleString("id-ID")} <br><br>
+                        <strong>Harga:</strong> Rp${dt.harga.toLocaleString("id-ID")} <br>
                         <span class="source-badge ${warnaBadge}">${response.source}</span>
                     `;
           })
           .catch((err) => {
-            detailBox.innerHTML = "Gagal memuat detail.";
+            detailBox.innerHTML = "Gagal memuatkan butiran.";
           });
       }
 
@@ -153,7 +177,7 @@
                     <p><strong>Backend:</strong> ${dataReg.fortune} (${timeReg}ms)</p>
                 `;
         } catch (err) {
-          footer.innerHTML = "<p>Gagal memuat fungsi Fortune.</p>";
+          footer.innerHTML = "<p>Gagal memuatkan fungsi Fortune.</p>";
         }
       }
       fetchFortune();
