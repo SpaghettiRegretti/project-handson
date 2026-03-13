@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Koleksi Foto & Video</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .katalog-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+      }
+      .katalog-item {
+        border: 1px solid #ccc;
+        padding: 15px;
+        text-align: center;
+        border-radius: 8px;
+        width: 250px;
+      }
+      .katalog-item img {
+        max-width: 100%;
+        height: auto;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .katalog-item h3 {
+        cursor: pointer;
+        color: #0070f3;
+        margin-bottom: 5px;
+      }
+      .detail-box {
+        margin-top: 10px;
+        font-size: 0.9em;
+        color: #333;
+        display: none;
+        background: #f9f9f9;
+        padding: 10px;
+        border-radius: 4px;
+      }
+      .source-badge {
+        font-size: 0.7em;
+        font-weight: bold;
+        color: white;
+        background: #e00;
+        padding: 2px 5px;
+        border-radius: 3px;
+      }
+      .source-redis {
+        background: #0070f3;
+      }
+      footer {
+        margin-top: 40px;
+        border-top: 2px solid #eee;
+        padding-top: 20px;
+        text-align: center;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 style="text-align: center">Koleksi Seni</h1>
+    <p style="text-align: center; font-size: 0.9em; color: gray">
+      *Klik gambar atau judul untuk melihat detail koleksi
+    </p>
+
+    <div id="katalog" class="katalog-container">
+      <p>Memuat koleksi...</p>
+    </div>
+
+    <footer id="fortune-footer">
+      <p>Memuat Fortune...</p>
+    </footer>
+
+    <script>
+      // 1. Mengambil data katalog awal (get-koleksi)
+      fetch("/api/get-koleksi")
+        .then((res) => res.json())
+        .then((response) => {
+          const katalogDiv = document.getElementById("katalog");
+          katalogDiv.innerHTML = ""; // Bersihkan tulisan loading
+
+          response.data.forEach((item) => {
+            const el = document.createElement("div");
+            el.className = "katalog-item";
+            el.innerHTML = `
+                        <img src="${item.path}" alt="${item.judul}" onclick="tampilkanDetail(${item.id})">
+                        <h3 onclick="tampilkanDetail(${item.id})">${item.judul}</h3>
+                        <div id="detail-${item.id}" class="detail-box">Memuat detail...</div>
+                    `;
+            katalogDiv.appendChild(el);
+          });
+        })
+        .catch((err) => console.error("Error muat katalog:", err));
+
+      // 2. Fungsi saat gambar/judul diklik (get-detail)
+      function tampilkanDetail(id) {
+        const detailBox = document.getElementById(`detail-${id}`);
+
+        // Toggle tutup/buka
+        if (detailBox.style.display === "block") {
+          detailBox.style.display = "none";
+          return;
+        }
+
+        detailBox.style.display = "block";
+        detailBox.innerHTML = "Memuat detail...";
+
+        fetch(`/api/get-detail?id=${id}`)
+          .then((res) => res.json())
+          .then((response) => {
+            const dt = response.data;
+            const warnaBadge =
+              response.source === "REDIS" ? "source-redis" : "";
+
+            detailBox.innerHTML = `
+                        <strong>Pencipta:</strong> ${dt.pencipta} <br>
+                        <strong>Tahun:</strong> ${dt.tahun} <br>
+                        <strong>Harga:</strong> Rp${dt.harga.toLocaleString("id-ID")} <br><br>
+                        <span class="source-badge ${warnaBadge}">${response.source}</span>
+                    `;
+          })
+          .catch((err) => {
+            detailBox.innerHTML = "Gagal memuat detail.";
+          });
+      }
+
+      // 3. Memuat output Fortune (Serverless & Edge) beserta waktu responsnya
+      const footer = document.getElementById("fortune-footer");
+
+      async function fetchFortune() {
+        try {
+          // Hitung waktu pemrosesan Edge Function
+          const startEdge = performance.now();
+          const resEdge = await fetch("/api/fortune-edge");
+          const dataEdge = await resEdge.json();
+          const timeEdge = Math.round(performance.now() - startEdge);
+
+          // Hitung waktu pemrosesan Serverless biasa
+          const startReg = performance.now();
+          const resReg = await fetch("/api/fortune");
+          const dataReg = await resReg.json();
+          const timeReg = Math.round(performance.now() - startReg);
+
+          footer.innerHTML = `
+                    <p><strong>Edge:</strong> ${dataEdge.fortune} (${timeEdge}ms)</p>
+                    <p><strong>Backend:</strong> ${dataReg.fortune} (${timeReg}ms)</p>
+                `;
+        } catch (err) {
+          footer.innerHTML = "<p>Gagal memuat fungsi Fortune.</p>";
+        }
+      }
+      fetchFortune();
+    </script>
+  </body>
+</html>
