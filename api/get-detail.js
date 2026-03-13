@@ -8,16 +8,15 @@ const supabase = createClient(
 const redis = createRedisClient({ url: process.env.REDIS_URL });
 
 export default async function handler(req, res) {
-  // Tangkap ID yang dikirim dari frontend
   const { id } = req.query;
   if (!id) return res.status(400).json({ error: "ID parameter is missing" });
 
   try {
     if (!redis.isOpen) await redis.connect();
 
-    const cacheKey = `koleksi_detail_${id}`;
+    const cacheKey = `detail_seni_${id}`;
 
-    // Cek cache Redis spesifik untuk ID ini
+    // Cek cache Redis spesifik per ID gambar
     const cachedData = await redis.get(cacheKey);
     if (cachedData) {
       return res
@@ -25,7 +24,7 @@ export default async function handler(req, res) {
         .json({ source: "REDIS", data: JSON.parse(cachedData) });
     }
 
-    // Jika tidak ada, ambil detail dari Supabase berdasarkan ID
+    // Ambil detail spesifik dari tabel koleksi berdasarkan ID
     const { data, error } = await supabase
       .from("koleksi")
       .select("pencipta, tahun, harga")
