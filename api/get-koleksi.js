@@ -1,14 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createRedisClient } from "redis";
 
+// Ubah menjadi NEXT_PUBLIC_... sesuai dengan isi .env.local Anda
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY,
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 );
-const redis = createRedisClient({ url: process.env.REDIS_URL });
+
+// Untuk Redis, kita tambahkan fallback (opsi) jika namanya KV_URL
+const redisUrl = process.env.REDIS_URL || process.env.KV_URL;
+const redis = createRedisClient({ url: redisUrl });
 
 export default async function handler(req, res) {
   try {
+    if (!redisUrl) throw new Error("Redis URL tidak ditemukan di env!");
     if (!redis.isOpen) await redis.connect();
 
     // Cek cache Redis (kunci: katalog_seni)
