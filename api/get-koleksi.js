@@ -3,8 +3,8 @@ import { createClient as createRedisClient } from "redis";
 
 // Ubah menjadi NEXT_PUBLIC_... sesuai dengan isi .env.local Anda
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY,
 );
 
 // Untuk Redis, kita tambahkan fallback (opsi) jika namanya KV_URL
